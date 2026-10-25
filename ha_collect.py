@@ -37,6 +37,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+
 class Entity(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str
@@ -77,7 +78,7 @@ class Config(BaseModel):
     @model_validator(mode="after")
     def cross_checks(self):
         ids = [e.id for e in self.entities]
-        columns = [e.column+e.unit for e in self.entities] + [self.timestamp_column]
+        columns = [e.column + e.unit for e in self.entities] + [self.timestamp_column]
         if len(set(ids)) != len(ids):
             raise ValueError("Duplicate entity ids")
         if len(set(columns)) != len(columns):
@@ -164,7 +165,9 @@ class HomeAssistantSampler:
         samples = []
         while True:
             start = time.perf_counter()
-            log.info("Taking sample %d/%d", (len(samples) + 1), self.__samples_per_record)
+            log.info(
+                "Taking sample %d/%d", (len(samples) + 1), self.__samples_per_record
+            )
             samples.append(self.__get_sample())
             if len(samples) >= self.__samples_per_record:
                 log.info("Aggregating %d samples into one record", len(samples))
@@ -214,21 +217,23 @@ def print_entities_list(ha_api, config_entities):
                 "Unit": unit,
                 "Selected In Config": "Yes" if in_config else "",
                 "Config Error": (
-                    f"Unit missmatch: {unit!r} vs. {config_unit!r}" if unit_missmatch else ""
+                    f"Unit missmatch: {unit!r} vs. {config_unit!r}"
+                    if unit_missmatch
+                    else ""
                 ),
             }
         )
     for e in config_entities:
         if e.id not in entity_values:
-            entities.append({
-                "Entity Id": e.id,
-                "Value": None,
-                "Unit": e.unit,
-                "Selected In Config": "Yes",
-                "Config Error": (
-                    f"No such entity ID"
-                ),
-            })
+            entities.append(
+                {
+                    "Entity Id": e.id,
+                    "Value": None,
+                    "Unit": e.unit,
+                    "Selected In Config": "Yes",
+                    "Config Error": ("No such entity ID"),
+                }
+            )
     df = pd.DataFrame(entities).fillna("").sort_values("Entity Id")
     print(
         df.to_markdown(
@@ -333,18 +338,12 @@ def main():
             raise ValueError("Unknown output format")
         store_record_format(config.output_dir, record, year, month)
 
-    # TODO just for testing
-    sampling_interval = config.sampling_interval
-    samples_per_record = config.samples_per_record
-    sampling_interval = 1
-    samples_per_record = 3
-
     HomeAssistantSampler(
         ha_api,
         store_record,
         config.entities,
-        sampling_interval,
-        samples_per_record,
+        config.sampling_interval,
+        config.samples_per_record,
     ).run()
 
 
