@@ -1,0 +1,10 @@
+timezone: "Europe/Berlin"
+samples_per_record: 100
+records_per_day: 96 # every 15 minutes => >= 2976 per month
+timestamp_column: "Zeitstempel"
+output_dir: "."
+output_format: "excel" # alternatives: csv, jsonl
+entities:
+    - id: "sensor.th_sensor_482b8d_tp35x_393_tempc"
+      column: "Außen"
+      unit: "°C"
